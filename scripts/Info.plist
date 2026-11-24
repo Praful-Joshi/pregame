@@ -41,12 +41,18 @@
     <key>SUEnableAutomaticChecks</key>
     <true/>
     <!-- In the sandbox, Sparkle installs through its Installer XPC service and
-         downloads through its Downloader XPC service, so the app itself needs
-         no network access. -->
+         downloads through its Downloader XPC service. -->
     <key>SUEnableInstallerLauncherService</key>
     <true/>
     <key>SUEnableDownloaderService</key>
     <true/>
+    <!-- Crash reports and usage data, sent only if the Mix Host agrees
+         (docs/privacy.md). Neither is a secret: a DSN only lets you submit
+         events. Left empty, the app asks nothing and sends nothing. -->
+    <key>PregameSentryDSN</key>
+    <string></string>
+    <key>PregameTelemetryDeckAppID</key>
+    <string></string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

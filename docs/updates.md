@@ -21,7 +21,7 @@ Sparkle also checks that the new app's code signature satisfies the installed ap
 
 The app is sandboxed ([ADR-0003](adr/0003-app-sandbox-from-v1.md)), so Sparkle works through its XPC services, embedded in `Sparkle.framework`:
 
-- **Downloader** fetches the appcast and the DMG. It's sandboxed with network access, so the app itself still has no network entitlement.
+- **Downloader** fetches the appcast and the DMG. It's sandboxed with its own network access. (The app's own outgoing-network entitlement is only for opt-in crash reports and usage data: [privacy.md](privacy.md).)
 - **Installer** launches Sparkle's installer outside the sandbox. The app reaches it through two Mach service names, `com.prafuljoshi.pregame-spks` and `-spki`, listed as a temporary exception in `scripts/Pregame.entitlements`. They must match the bundle ID.
 
 `scripts/build-app.sh` copies the framework from the pinned package and signs it inside out with the app's certificate and the hardened runtime: the XPC services, `Autoupdate`, `Updater.app`, then the framework. The Downloader gets Sparkle's own entitlements file, because its packaged copy carries none. The CI job `signed-app` checks all of this on a real build.

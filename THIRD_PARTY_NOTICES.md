@@ -12,6 +12,7 @@ Pregame is free software under the GNU General Public License, version 3 (see [L
 | [LAME](https://lame.sourceforge.io) | MP3 encoding | LGPL-2.0-or-later | Linked statically |
 | [mpg123](https://www.mpg123.de) | MP3 decoding for LAME | LGPL-2.1 | Linked statically |
 | [Sparkle](https://sparkle-project.org) 2.10.1 | Checking for and installing updates | MIT | Framework bundled in the app |
+| [Sentry](https://github.com/getsentry/sentry-cocoa) 9.33.0 | Crash reports, only if the Mix Host agrees | MIT | Framework bundled in the app |
 | [libsamplerate](https://libsndfile.github.io/libsamplerate/) | Sample-rate conversion for Rubber Band | BSD-2-Clause | Linked statically |
 | [KISS FFT](https://github.com/mborgerding/kissfft) | FFT inside QM DSP | BSD-3-Clause | Source in `Sources/QMDSP/ext/kissfft` |
 | [Mixxx](https://mixxx.org) | Analysis settings and BPM post-processing ported from Mixxx 2.5 | GPL-2.0-or-later | Ported code in `Sources/PregameCore` |
@@ -26,6 +27,7 @@ Pregame is free software under the GNU General Public License, version 3 (see [L
 - **LAME:** Copyright © the LAME project. Released under the GNU LGPL, version 2 or later.
 - **mpg123:** Copyright © the mpg123 project. Released under the GNU LGPL, version 2.1.
 - **Sparkle:** Copyright © Andy Matuschak, Elgato Systems GmbH, Kornel Lesiński, Mayur Pawashe, C.W. Betts, Petroules Corporation, Big Nerd Ranch and the Sparkle Project contributors. Released under the MIT License. Full text, including the licences of the code Sparkle itself includes: `SPARKLE_LICENSE` in the app's resources, from [Sparkle's repository](https://github.com/sparkle-project/Sparkle/blob/2.10.1/LICENSE).
+- **Sentry:** Copyright © 2015 Sentry. Released under the MIT License. Full text: `SENTRY_LICENSE` in the app's resources, from [sentry-cocoa's repository](https://github.com/getsentry/sentry-cocoa/blob/9.33.0/LICENSE.md).
 - **libsamplerate:** Copyright © Erik de Castro Lopo and contributors. Released under the BSD 2-Clause License.
 - **KISS FFT:** Copyright © Mark Borgerding. Released under the BSD 3-Clause License. Full text: [`Sources/QMDSP/ext/kissfft/COPYING`](Sources/QMDSP/ext/kissfft/COPYING).
 - **Mixxx:** Copyright © the Mixxx team. Released under the GNU GPL, version 2 or later.

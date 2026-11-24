@@ -19,6 +19,11 @@ let package = Package(
         // Sparkle (MIT): in-app updates from an EdDSA-signed appcast. Pinned to
         // an exact version; scripts/build-app.sh embeds and signs the framework.
         .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.1"),
+        // Sentry (MIT): crash reports, only with the Mix Host's consent
+        // (docs/privacy.md). The build without the UIKit/AppKit integrations, so
+        // it can't collect window titles or UI breadcrumbs; scripts/build-app.sh
+        // embeds and signs the framework.
+        .package(url: "https://github.com/getsentry/sentry-cocoa", exact: "9.33.0"),
     ],
     targets: [
         // Queen Mary DSP (GPL-2.0+), vendored from Mixxx 2.5, plus a C shim.
@@ -92,7 +97,8 @@ let package = Package(
         ),
         .executableTarget(
             name: "PregameApp",
-            dependencies: ["PregameCore", .product(name: "Sparkle", package: "Sparkle")],
+            dependencies: ["PregameCore", .product(name: "Sparkle", package: "Sparkle"),
+                           .product(name: "Sentry-WithoutUIKitOrAppKit", package: "sentry-cocoa")],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .testTarget(

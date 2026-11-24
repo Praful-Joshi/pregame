@@ -43,7 +43,13 @@ final class AnalysisController: ObservableObject {
                         await Task.detached(priority: .userInitiated) {
                             do {
                                 let hash = try AnalysisCache.contentHash(t.url)
+                                let fresh = AnalysisCache.shared.cached(hash) == nil
+                                let started = Date()
                                 let a = try AnalysisCache.shared.analysis(for: t.url, hash: hash)
+                                if fresh {
+                                    Telemetry.shared.record(.trackAnalysed(seconds: Date().timeIntervalSince(started),
+                                                                           trackSeconds: a.duration))
+                                }
                                 return (t.id, t.filename, hash, a)
                             } catch {
                                 return (t.id, t.filename, nil, nil)

@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var window: NSWindow?
     @State private var followingSelection = false
     @State private var showRelocate = false
+    @State private var showConsent = false
 
     var body: some View {
         commands(sheets(split))
@@ -72,6 +73,7 @@ struct ContentView: View {
                 requestStems()
             }
         }
+        .sheet(isPresented: $showConsent) { ConsentPrompt() }
         .sheet(item: $infoTrack) { t in
             VStack(alignment: .leading, spacing: Space.xl) {
                 TrackDetail(document: document, trackID: t.id)
@@ -94,6 +96,8 @@ struct ContentView: View {
             requestStems()
             // A Mix whose Tracks can't be reached asks where their folders are now.
             showRelocate = !document.project.missingFolders().isEmpty
+            // The one-time question about crash reports and usage data, in one window.
+            if !showRelocate, Telemetry.shared.claimPrompt() { showConsent = true }
         }
         .onDisappear { player.pause(); player.engine.stop() }
         .onChange(of: window) { if let window { document.markLocatedChanges(in: window) } }
@@ -227,7 +231,10 @@ struct ContentView: View {
             if !urls.isEmpty { alert = "Those tracks are already in this mix." }
             return
         }
+        let wasEmpty = document.project.tracks.isEmpty
         document.perform("Add Tracks", undo: undo) { $0.tracks += new }
+        if wasEmpty { Telemetry.shared.record(.mixCreated) }
+        Telemetry.shared.record(.tracksAdded(count: new.count))
     }
 
     private func importRun() {
