@@ -7,13 +7,13 @@ import SentryWithoutUIKit
 /// It errs towards removing too much: a crash is read from its stack, not its text.
 enum CrashScrubber {
     /// A path (absolute, home-relative or a file URL) up to the next colon,
-    /// quote, bracket or line end; paths can contain spaces.
+    /// comma, quote, bracket or line end; paths can contain spaces.
     private static let path = try! NSRegularExpression(
-        pattern: #"(?:file://|~(?=/)|(?<=^|[\s"“‘'(\[=<]))/[^:\n"“”‘’()\[\]<>]*"#)
-    /// A song, Mix or playlist file name, from the last quote, bracket, slash or
-    /// colon (or the start) to its extension.
+        pattern: #"(?:file://|~(?=/)|(?<=^|[\s"“‘'(\[=<:,]))/[^:,\n"“”‘’()\[\]<>]*"#)
+    /// An audio, Mix or playlist (M3U, CSV, cue sheet) file name, from the last
+    /// quote, bracket, slash, colon or comma (or the start) to its extension.
     private static let fileName = try! NSRegularExpression(
-        pattern: #"(?<=^|[\n"“‘(\[/:<]|:\s)[^\n"“”‘’()\[\]/:<>]*?\.(?:mp3|wav|wave|aiff?|flac|m4a|aac|alac|ogg|oga|opus|wma|mp4|caf|hmix|m3u8?|csv|cue)\b"#,
+        pattern: #"(?<=^|[\n"“‘(\[/:<,]|[:,]\s)[^\n"“”‘’()\[\]/:,<>]*?\.(?:mp3|wav|wave|aiff?|flac|m4a|aac|alac|ogg|oga|opus|wma|mp4|caf|hmix|m3u8?|csv|cue)\b"#,
         options: .caseInsensitive)
 
     /// The text with every path replaced by `<path>` and file name by `<file>`.

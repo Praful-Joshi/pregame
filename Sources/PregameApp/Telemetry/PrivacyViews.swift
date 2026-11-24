@@ -3,25 +3,37 @@ import SwiftUI
 /// Where docs/privacy.md is published: the list of everything that's sent.
 let privacyDocURL = URL(string: "https://github.com/Praful-Joshi/pregame/blob/main/docs/privacy.md")!
 
-/// The one-time question on first launch. Both answers carry equal weight:
-/// neither is the default button, and Esc picks neither.
+/// The one-time question on first launch (docs/design.md): what to share,
+/// then "No thanks" or "Share selected", plain buttons of equal weight with no
+/// default, so neither Return nor Esc answers it.
 struct ConsentPrompt: View {
     @ObservedObject private var telemetry = Telemetry.shared
     @Environment(\.dismiss) private var dismiss
+    @State private var crashReports = true
+    @State private var usageData = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.xl) {
             Label("Help make Pregame better?", systemImage: "hand.raised")
                 .font(.title2.bold())
-            Text("Pregame can send anonymous crash reports, and a few usage events like “Mix created” or “export finished”, with the app version and the kind of Mac.")
-            Text("It never sends song titles, file names or paths, and never your music.")
+            VStack(alignment: .leading, spacing: Space.m) {
+                if telemetry.canReportCrashes {
+                    Toggle("Send crash reports", isOn: $crashReports)
+                }
+                if telemetry.canSendUsage {
+                    Toggle("Send anonymous usage data, like “Mix created” or “export finished”", isOn: $usageData)
+                }
+            }
+            .toggleStyle(.checkbox)
+            Text("Never your music, Track titles, file names or paths. Each comes with the app version and the kind of Mac.")
                 .foregroundStyle(.secondary)
             Link("See everything that's sent", destination: privacyDocURL)
             Text("You can change this anytime in Settings › Privacy.")
                 .font(.caption).foregroundStyle(.secondary)
             HStack(spacing: Space.l) {
-                Button { choose(false) } label: { Text("No Thanks").frame(maxWidth: .infinity) }
-                Button { choose(true) } label: { Text("Share").frame(maxWidth: .infinity) }
+                Button { answer(share: false) } label: { Text("No thanks").frame(maxWidth: .infinity) }
+                Button { answer(share: true) } label: { Text("Share selected").frame(maxWidth: .infinity) }
+                    .disabled(!(crashReports && telemetry.canReportCrashes) && !(usageData && telemetry.canSendUsage))
             }
             .controlSize(.large)
         }
@@ -30,8 +42,8 @@ struct ConsentPrompt: View {
         .interactiveDismissDisabled()
     }
 
-    private func choose(_ share: Bool) {
-        telemetry.answer(share: share)
+    private func answer(share: Bool) {
+        telemetry.answer(crashReports: share && crashReports, usageData: share && usageData)
         dismiss()
     }
 }
@@ -49,7 +61,7 @@ struct PrivacySettings: View {
                     .disabled(!telemetry.canSendUsage)
             } footer: {
                 Text(telemetry.isAvailable
-                     ? "Crash reports go to Sentry and usage data to TelemetryDeck. Neither includes song titles, file names or paths."
+                     ? "Crash reports go to Sentry and usage data to TelemetryDeck. Neither includes your music, Track titles, file names or paths."
                      : "This build has nothing to send to: only release builds carry the crash and usage keys.")
                     .font(.caption).foregroundStyle(.secondary)
             }

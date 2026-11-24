@@ -62,11 +62,12 @@ final class Telemetry: ObservableObject {
         return true
     }
 
-    /// The prompt's answer: one choice for both, each changeable in Settings later.
-    func answer(share: Bool) {
+    /// The prompt's answer ("No thanks" is both false); each can be changed in
+    /// Settings later.
+    func answer(crashReports: Bool, usageData: Bool) {
         defaults.set(true, forKey: Key.asked)
-        crashReports = share
-        usageData = share
+        self.crashReports = crashReports
+        self.usageData = usageData
     }
 
     var crashReports: Bool {

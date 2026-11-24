@@ -79,6 +79,11 @@ final class CrashScrubberTests: XCTestCase {
         XCTAssertTrue(e.breadcrumbs?.isEmpty ?? true)
     }
 
+    func testPathsRightAfterAColonOrCommaAreRemoved() {
+        XCTAssertEqual(CrashScrubber.scrub("failed at:/Users/praful/Music/Sets, retrying"), "failed at:<path>, retrying")
+        XCTAssertEqual(CrashScrubber.scrub("tried a.wav,/Volumes/USB/Party Mix"), "<file>,<path>")
+    }
+
     func testTextWithoutPathsIsLeftAlone() {
         XCTAssertEqual(CrashScrubber.scrub("Index out of range"), "Index out of range")
         XCTAssertEqual(CrashScrubber.scrub("Fatal error: 3/4 done"), "Fatal error: 3/4 done")

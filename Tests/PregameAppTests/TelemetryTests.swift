@@ -61,7 +61,7 @@ final class TelemetryTests: XCTestCase {
         let t = telemetry()
         t.start()
         XCTAssertTrue(t.needsAnswer)
-        t.answer(share: true)
+        t.answer(crashReports: true, usageData: true)
         XCTAssertFalse(t.needsAnswer)
         XCTAssertTrue(crashes.running)
         t.record(.mixCreated)
@@ -78,13 +78,24 @@ final class TelemetryTests: XCTestCase {
     }
 
     func testNoThanksStartsAndSendsNothingAndIsNotAskedAgain() async {
-        telemetry().answer(share: false)
+        telemetry().answer(crashReports: false, usageData: false)
         let relaunched = telemetry()
         relaunched.start()
         relaunched.record(.mixCreated)
         await settle()
         XCTAssertFalse(relaunched.needsAnswer)
         XCTAssertEqual(crashes.starts, 0)
+        XCTAssertTrue(outbox.requests.isEmpty)
+    }
+
+    /// "Share selected" shares only what's ticked in the prompt.
+    func testSharingOnlyCrashReportsSendsNoEvents() async {
+        let t = telemetry()
+        t.answer(crashReports: true, usageData: false)
+        t.record(.mixCreated)
+        await settle()
+        XCTAssertFalse(t.needsAnswer)
+        XCTAssertTrue(crashes.running)
         XCTAssertTrue(outbox.requests.isEmpty)
     }
 
@@ -97,7 +108,7 @@ final class TelemetryTests: XCTestCase {
     // MARK: - Settings
 
     func testTheAnswerIsKeptAcrossLaunches() {
-        telemetry().answer(share: true)
+        telemetry().answer(crashReports: true, usageData: true)
         crashes.stop()
         telemetry().start()
         XCTAssertTrue(crashes.running)
@@ -105,7 +116,7 @@ final class TelemetryTests: XCTestCase {
 
     func testTurningCrashReportsOffInSettingsStopsThem() {
         let t = telemetry()
-        t.answer(share: true)
+        t.answer(crashReports: true, usageData: true)
         t.crashReports = false
         XCTAssertFalse(crashes.running)
         telemetry().start()
@@ -114,7 +125,7 @@ final class TelemetryTests: XCTestCase {
 
     func testTurningUsageDataOffInSettingsStopsEventsButKeepsCrashReports() async {
         let t = telemetry()
-        t.answer(share: true)
+        t.answer(crashReports: true, usageData: true)
         t.usageData = false
         t.record(.tracksAdded(count: 2))
         await settle()
@@ -124,7 +135,7 @@ final class TelemetryTests: XCTestCase {
 
     func testEitherCanBeTurnedOnLaterInSettings() async {
         let t = telemetry()
-        t.answer(share: false)
+        t.answer(crashReports: false, usageData: false)
         t.usageData = true
         t.record(.mixCreated)
         await settle()
@@ -138,7 +149,7 @@ final class TelemetryTests: XCTestCase {
 
     private func sent(_ events: TelemetryEvent..., from t: Telemetry? = nil) async throws -> [[String: Any]] {
         let t = t ?? telemetry()
-        t.answer(share: true)
+        t.answer(crashReports: true, usageData: true)
         for e in events { t.record(e) }
         await settle()
         return try outbox.requests.flatMap { r -> [[String: Any]] in
