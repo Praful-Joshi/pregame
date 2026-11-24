@@ -52,7 +52,7 @@
     <key>PregameSentryDSN</key>
     <string>https://7608e6ecb1a9e49940184cc3d0bc3b32@o4512486964854784.ingest.us.sentry.io/4512486982811648</string>
     <key>PregameTelemetryDeckAppID</key>
-    <string></string>
+    <string>399CB20C-E48F-4B7A-879D-9F83AD77F691</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

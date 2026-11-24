@@ -46,11 +46,13 @@ jobs:
           P12: ${{ secrets.PREGAME_SIGNING_P12 }}
           P12_PASSPHRASE: ${{ secrets.PREGAME_SIGNING_P12_PASSPHRASE }}
           SPARKLE_KEY: ${{ secrets.PREGAME_SPARKLE_KEY }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           MISSING=()
           [[ -n "$P12" ]] || MISSING+=(PREGAME_SIGNING_P12)
           [[ -n "$P12_PASSPHRASE" ]] || MISSING+=(PREGAME_SIGNING_P12_PASSPHRASE)
           [[ -n "$SPARKLE_KEY" ]] || MISSING+=(PREGAME_SPARKLE_KEY)
+          [[ -n "$SENTRY_AUTH_TOKEN" ]] || MISSING+=(SENTRY_AUTH_TOKEN)
           (( ${#MISSING[@]} == 0 )) || { echo "::error::Add ${MISSING[*]} to the release environment (docs/releasing.md)"; exit 1; }
 
       # Only what's merged (and so tested) is released, and Sparkle offers an
@@ -98,6 +100,25 @@ jobs:
 
       - name: Build, check and package
         run: scripts/release.sh "$TAG"
+
+      # Crash reports name Pregame's own functions only if Sentry has this
+      # build's debug symbols (docs/privacy.md). The Sentry CLI is pinned to a
+      # version and its checksum; the token is an org token that can only
+      # upload (docs/releasing.md).
+      - name: Upload debug symbols to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: pregame-inc
+          SENTRY_PROJECT: pregame
+          SENTRY_CLI_NO_TELEMETRY: "1"
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/sentry.gz" \
+            https://github.com/getsentry/toolkit/releases/download/cli@0.50.0/sentry-darwin-arm64.gz
+          echo "0b0e857366a5676c452ad93c57e3d86dff828e3189f24c65caf3d89517312692  sentry.gz" \
+            | (cd "$RUNNER_TEMP" && shasum -a 256 -c -)
+          gunzip -c "$RUNNER_TEMP/sentry.gz" > "$RUNNER_TEMP/sentry"
+          chmod +x "$RUNNER_TEMP/sentry"
+          "$RUNNER_TEMP/sentry" debug-files upload --wait build/Pregame.dSYM
 
       # For the one bridge release that rotates the update key, the
       # environment variable PREGAME_INSTALLED_PUBLIC_KEY names the old key

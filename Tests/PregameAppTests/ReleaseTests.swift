@@ -69,7 +69,7 @@ final class ReleaseTests: XCTestCase {
     func testTheReleaseRunsInTheProtectedEnvironment() throws {
         let release = try text(".github/workflows/release.yml")
         XCTAssertTrue(release.contains("\n    environment: release\n"), "the release job isn't in the release environment")
-        for secret in ["PREGAME_SIGNING_P12", "PREGAME_SIGNING_P12_PASSPHRASE", "PREGAME_SPARKLE_KEY"] {
+        for secret in ["PREGAME_SIGNING_P12", "PREGAME_SIGNING_P12_PASSPHRASE", "PREGAME_SPARKLE_KEY", "SENTRY_AUTH_TOKEN"] {
             XCTAssertTrue(release.contains("secrets.\(secret) }}"), "the release doesn't use \(secret)")
         }
     }
@@ -111,6 +111,22 @@ final class ReleaseTests: XCTestCase {
         XCTAssertTrue(release.contains("\"$DMG\" \"$APPCAST\""), "the release doesn't carry both the DMG and the appcast")
         XCTAssertTrue(release.contains("scripts/release.sh"), "the release doesn't build with scripts/release.sh")
         XCTAssertTrue(release.contains("scripts/make-appcast.sh"), "the appcast isn't generated")
+    }
+
+    /// Crash reports name Pregame's own functions only if Sentry has the
+    /// release's debug symbols: build-app.sh writes a dSYM next to the app, and
+    /// the release uploads it with a Sentry CLI whose download is pinned to a
+    /// checksum (docs/privacy.md, docs/releasing.md).
+    func testTheReleaseUploadsItsDebugSymbolsToSentry() throws {
+        let build = try text("scripts/build-app.sh")
+        XCTAssertTrue(build.contains("dsymutil") && build.contains("build/Pregame.dSYM"), "build-app.sh makes no dSYM")
+        let release = try text(".github/workflows/release.yml")
+        XCTAssertTrue(release.contains("debug-files upload"), "nothing is uploaded to Sentry")
+        XCTAssertTrue(release.contains("build/Pregame.dSYM"), "the upload isn't the release's dSYM")
+        XCTAssertTrue(release.contains("SENTRY_ORG: pregame-inc") && release.contains("SENTRY_PROJECT: pregame"))
+        XCTAssertNotNil(release.range(of: #"[0-9a-f]{64}  sentry"#, options: .regularExpression)
+                        .flatMap { _ in release.range(of: "shasum -a 256 -c") },
+                        "the Sentry CLI download isn't checked against a pinned SHA-256")
     }
 
     /// Homebrew's libraries carry the minimum macOS of the machine that built

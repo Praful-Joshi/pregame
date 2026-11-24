@@ -34,6 +34,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Framewor
 cp "$BIN/Pregame" "$APP/Contents/MacOS/Pregame"
 cp -R "$BIN/Pregame_PregameCore.bundle" "$APP/Contents/Resources/"
 cp scripts/Info.plist "$APP/Contents/Info.plist"
+# Debug symbols, so crash reports name Pregame's own functions: the release
+# uploads them to Sentry (docs/releasing.md). Same UUID as the app's binary.
+rm -rf build/Pregame.dSYM
+dsymutil "$BIN/Pregame" -o build/Pregame.dSYM
 cp scripts/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"   # from scripts/icon/make-icon.swift
 cp LICENSE THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 cp Vendor/onnxruntime/LICENSE "$APP/Contents/Resources/ONNXRUNTIME_LICENSE"
