@@ -50,7 +50,7 @@
          (docs/privacy.md). Neither is a secret: a DSN only lets you submit
          events. Left empty, the app asks nothing and sends nothing. -->
     <key>PregameSentryDSN</key>
-    <string></string>
+    <string>https://7608e6ecb1a9e49940184cc3d0bc3b32@o4512486964854784.ingest.us.sentry.io/4512486982811648</string>
     <key>PregameTelemetryDeckAppID</key>
     <string></string>
     <key>CFBundleDocumentTypes</key>

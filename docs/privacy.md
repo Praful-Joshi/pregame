@@ -14,7 +14,7 @@ If Pregame crashes or hangs, the next launch sends a report to [Sentry](https://
 - the error's type and message, with any path replaced by `<path>` and any audio, Mix or playlist file name replaced by `<file>`
 - the app version, and the technical details Sentry collects about macOS and the Mac: its model (such as `Mac16,10`), memory, free disk space, time zone and language
 
-Before a report leaves your Mac, Pregame removes your Mac's name, the folder the app runs from, and any user ID. The scrubber recognises paths, and file names by their extension (audio files, Mixes, playlists, CSV and cue sheets). It can't recognise a bare title with no extension in an error message, so Pregame's own error messages don't include titles. Sentry's other features are switched off: breadcrumbs, performance tracing, network and file tracking, session tracking and logs. The code is in [`CrashScrubber.swift`](../Sources/PregameApp/Telemetry/CrashScrubber.swift) and [`CrashReports.swift`](../Sources/PregameApp/Telemetry/CrashReports.swift).
+Sentry doesn't store the IP address a report comes from, but it records the approximate location (country and city) it works out from that address. Before a report leaves your Mac, Pregame removes your Mac's name, the folder the app runs from, and any user ID. The scrubber recognises paths, and file names by their extension (audio files, Mixes, playlists, CSV and cue sheets). It can't recognise a bare title with no extension in an error message, so Pregame's own error messages don't include titles. Sentry's other features are switched off: breadcrumbs, performance tracing, network and file tracking, session tracking and logs. The code is in [`CrashScrubber.swift`](../Sources/PregameApp/Telemetry/CrashScrubber.swift) and [`CrashReports.swift`](../Sources/PregameApp/Telemetry/CrashReports.swift).
 
 ## Usage data (TelemetryDeck)
 
@@ -59,6 +59,6 @@ TelemetryDeck also sees the IP address the request comes from, like any web serv
 ## For maintainers
 
 - The Sentry DSN and the TelemetryDeck app ID go in `scripts/Info.plist`, as `PregameSentryDSN` and `PregameTelemetryDeckAppID`. Neither is secret: either one only lets someone submit events. Leave a key empty and that half is off: its toggle in Settings is disabled, and if both are empty there's no prompt.
-- In the Sentry project's settings, turn on "Prevent storing of IP addresses". Sentry sees the IP a report comes from, like any web server.
+- The Sentry project (`pregame-inc/pregame`) has "Prevent storing of IP addresses" on. Sentry still sees the IP a report comes from, like any web server, and works out an approximate location (country and city) from it before discarding the address.
 - To add an event: add a case to `TelemetryEvent`, add it to `TelemetryEvent.examples`, and list it here. `PrivacyDocsTests` fails until every event and field appears in this document.
 - `TelemetryTests` checks that nothing is started or sent without consent, and checks the exact fields of each signal. `CrashScrubberTests` checks what's removed from a crash report.
