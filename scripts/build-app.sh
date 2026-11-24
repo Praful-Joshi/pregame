@@ -34,11 +34,16 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Framewor
 cp "$BIN/Pregame" "$APP/Contents/MacOS/Pregame"
 cp -R "$BIN/Pregame_PregameCore.bundle" "$APP/Contents/Resources/"
 cp scripts/Info.plist "$APP/Contents/Info.plist"
+# Debug symbols, so crash reports name Pregame's own functions: the release
+# uploads them to Sentry (docs/releasing.md). Same UUID as the app's binary.
+rm -rf build/Pregame.dSYM
+dsymutil "$BIN/Pregame" -o build/Pregame.dSYM
 cp scripts/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"   # from scripts/icon/make-icon.swift
 cp LICENSE THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 cp Vendor/onnxruntime/LICENSE "$APP/Contents/Resources/ONNXRUNTIME_LICENSE"
 cp Sources/QMDSP/COPYING "$APP/Contents/Resources/QMDSP_COPYING"
 cp .build/checkouts/Sparkle/LICENSE "$APP/Contents/Resources/SPARKLE_LICENSE"
+cp .build/checkouts/sentry-cocoa/LICENSE.md "$APP/Contents/Resources/SENTRY_LICENSE"
 
 # Bundle TagLib so the app doesn't depend on Homebrew at runtime.
 cp "$TAGLIB" "$APP/Contents/Frameworks/libtag.2.dylib"
@@ -54,6 +59,9 @@ install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/Mac
 # Mac the app loads the embedded copy and its XPC services.
 SPARKLE=".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
 ditto "$SPARKLE" "$APP/Contents/Frameworks/Sparkle.framework"
+# Sentry (opt-in crash reports, docs/privacy.md): its macOS framework is dynamic.
+SENTRY=".build/artifacts/sentry-cocoa/Sentry-WithoutUIKitOrAppKit/Sentry-WithoutUIKitOrAppKit.xcframework/macos-arm64_x86_64/SentryWithoutUIKit.framework"
+ditto "$SENTRY" "$APP/Contents/Frameworks/SentryWithoutUIKit.framework"
 for rpath in $(otool -l "$APP/Contents/MacOS/Pregame" | awk '/LC_RPATH/ {getline; getline; print $2}'); do
   if [[ "$rpath" == "$PWD/.build/"* ]]; then
     install_name_tool -delete_rpath "$rpath" "$APP/Contents/MacOS/Pregame"
@@ -79,7 +87,7 @@ chmod -R u+w "$APP"
 # Sparkle's helpers are signed inside out with the app's identity, so an update
 # satisfies the installed app's designated requirement. The Downloader gets
 # Sparkle's own entitlements for it (sandbox plus network), which its packaged
-# copy doesn't carry; the app itself has no network access.
+# copy doesn't carry.
 SIGN=(codesign --force --sign "$IDENTITY" --options runtime --timestamp=none)
 "${SIGN[@]}" "$APP/Contents/Frameworks/libonnxruntime.1.dylib"
 "${SIGN[@]}" "$APP/Contents/Frameworks/libtag.2.dylib"
@@ -89,6 +97,7 @@ SPARKLE_B="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
 "${SIGN[@]}" "$SPARKLE_B/Autoupdate"
 "${SIGN[@]}" "$SPARKLE_B/Updater.app"
 "${SIGN[@]}" "$APP/Contents/Frameworks/Sparkle.framework"
+"${SIGN[@]}" "$APP/Contents/Frameworks/SentryWithoutUIKit.framework"
 "${SIGN[@]}" --entitlements scripts/Pregame.entitlements "$APP"
 codesign --verify --strict --deep "$APP"
 echo "Built $APP"

@@ -17,6 +17,9 @@ struct PregameApp: App {
         UserDefaults.standard.register(defaults: ["NSShowAppCentricOpenPanelInsteadOfUntitledFile": false])
         outputs = AudioOutputs.shared
         _ = Updates.shared   // starts the updater, so automatic checks run
+        // Crash reports start only if the Mix Host agreed (docs/privacy.md).
+        Telemetry.shared.start()
+        Telemetry.shared.record(.appLaunched)
     }
 
     var body: some Scene {

@@ -130,6 +130,7 @@ struct ExportSheet: View {
         let opts = options
         progress = 0
         error = nil
+        let started = Date()
         Task {
             let outcome = await Task.detached(priority: .userInitiated) {
                 Result {
@@ -142,7 +143,13 @@ struct ExportSheet: View {
                 }
             }.value
             switch outcome {
-            case let .success(r): result = r; progress = nil
+            case let .success(r):
+                result = r
+                progress = nil
+                if let format = TelemetryEvent.ExportFormat(wav: opts.wav, mp3: opts.mp3) {
+                    Telemetry.shared.record(.exportFinished(format: format, mixSeconds: r.seconds,
+                                                            exportSeconds: Date().timeIntervalSince(started)))
+                }
             case let .failure(e): error = (e as? LocalizedError)?.errorDescription ?? "\(e)"; progress = nil
             }
         }

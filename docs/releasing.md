@@ -33,13 +33,18 @@ EOF
 gh api -X POST repos/Praful-Joshi/pregame/environments/release/deployment-branch-policies -f name='v*' -f type=tag
 ```
 
-Then add the three secrets **to the environment** (`--env release`), never to the repository:
+Then add the four secrets **to the environment** (`--env release`), never to the repository:
 
 ```sh
 base64 -i ~/Documents/pregame-signing.p12 | gh secret set PREGAME_SIGNING_P12 --env release
 gh secret set PREGAME_SIGNING_P12_PASSPHRASE --env release        # paste the backup's passphrase
 gh secret set PREGAME_SPARKLE_KEY --env release < ~/Documents/pregame-update-key.txt
+sentry token create pregame-inc/release-debug-symbols --json --fields token \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"], end="")' \
+  | gh secret set SENTRY_AUTH_TOKEN --env release
 ```
+
+`SENTRY_AUTH_TOKEN` is a Sentry organization token, which can upload debug symbols but can't read anything. The release uploads `build/Pregame.dSYM` (made by `build-app.sh`) so crash reports name Pregame's own functions. A lost token isn't a problem: revoke it in Sentry (**Settings › Auth Tokens**) and make a new one the same way.
 
 `pregame-update-key.txt` is the export from `generate_keys -x` ([updates.md](updates.md)). Delete the exported files again once they're in your password manager.
 

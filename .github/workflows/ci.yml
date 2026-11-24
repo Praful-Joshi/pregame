@@ -142,17 +142,19 @@ jobs:
           B="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
           # Signed inside out with the app's identity and the hardened runtime,
           # so an update satisfies the installed app's designated requirement.
-          for code in "$B/XPCServices/Installer.xpc" "$B/XPCServices/Downloader.xpc" "$B/Autoupdate" "$B/Updater.app" "$APP/Contents/Frameworks/Sparkle.framework"; do
+          for code in "$B/XPCServices/Installer.xpc" "$B/XPCServices/Downloader.xpc" "$B/Autoupdate" "$B/Updater.app" "$APP/Contents/Frameworks/Sparkle.framework" "$APP/Contents/Frameworks/SentryWithoutUIKit.framework"; do
             codesign --verify --strict "$code"
             INFO="$(codesign --display --verbose=2 "$code" 2>&1)"
             [[ "$INFO" == *'Authority=Pregame Self-Signed'* ]] || { echo "$code: not signed with the app's identity"; exit 1; }
             [[ "$INFO" =~ flags=0x[0-9a-f]+\([^\)]*runtime ]] || { echo "$code: no hardened runtime"; exit 1; }
           done
-          # Sparkle downloads in its own XPC service; the app has no network access.
+          # Sparkle downloads in its own XPC service.
           DOWNLOADER="$(codesign --display --entitlements - --xml "$B/XPCServices/Downloader.xpc" 2>/dev/null | tr -d '\n\t ')"
           [[ "$DOWNLOADER" == *'<key>com.apple.security.network.client</key><true/>'* ]] || { echo "the Downloader can't reach the network"; exit 1; }
           ENTITLEMENTS="$(codesign --display --entitlements - --xml "$APP" 2>/dev/null)"
-          [[ "$ENTITLEMENTS" != *network.client* ]] || { echo "the app itself has network access"; exit 1; }
+          # The app's own outgoing connections are only for opt-in crash reports
+          # and usage data (docs/privacy.md), sent by Sentry's embedded framework.
+          [[ "$ENTITLEMENTS" == *network.client* ]] || { echo "the app can't send crash reports or usage data"; exit 1; }
           # The app loads its embedded Sparkle, not the build folder's.
           RPATHS="$(otool -l "$APP/Contents/MacOS/Pregame" | awk '/LC_RPATH/ {getline; getline; print $2}')"
           [[ "$RPATHS" != *"$PWD/.build/"* ]] || { echo "rpath into the build folder: $RPATHS"; exit 1; }

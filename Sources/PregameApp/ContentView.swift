@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var window: NSWindow?
     @State private var followingSelection = false
     @State private var showRelocate = false
+    @State private var showConsent = false
 
     var body: some View {
         commands(sheets(split))
@@ -72,6 +73,7 @@ struct ContentView: View {
                 requestStems()
             }
         }
+        .sheet(isPresented: $showConsent) { ConsentPrompt() }
         .sheet(item: $infoTrack) { t in
             VStack(alignment: .leading, spacing: Space.xl) {
                 TrackDetail(document: document, trackID: t.id)
@@ -94,8 +96,10 @@ struct ContentView: View {
             requestStems()
             // A Mix whose Tracks can't be reached asks where their folders are now.
             showRelocate = !document.project.missingFolders().isEmpty
+            askConsentIfNeeded()
         }
         .onDisappear { player.pause(); player.engine.stop() }
+        .onChange(of: showRelocate) { if !showRelocate { askConsentIfNeeded() } }
         .onChange(of: window) { if let window { document.markLocatedChanges(in: window) } }
         .onChange(of: document.project.tracks.count) { analysis.analyseMissing(in: document) }
         .onChange(of: document.project) { player.refresh(); editor.refresh(); requestStems() }
@@ -209,6 +213,12 @@ struct ContentView: View {
         }
     }
 
+    /// The one-time question about crash reports and usage data, in one
+    /// window, once no other sheet is up.
+    private func askConsentIfNeeded() {
+        if !showRelocate, Telemetry.shared.claimPrompt() { showConsent = true }
+    }
+
     // MARK: Actions
 
     private func addFolder(recursive: Bool) {
@@ -227,14 +237,19 @@ struct ContentView: View {
             if !urls.isEmpty { alert = "Those tracks are already in this mix." }
             return
         }
+        let wasEmpty = document.project.tracks.isEmpty
         document.perform("Add Tracks", undo: undo) { $0.tracks += new }
+        if wasEmpty { Telemetry.shared.record(.mixCreated) }
+        Telemetry.shared.record(.tracksAdded(count: new.count))
     }
 
     private func importRun() {
         guard let folder = Panels.chooseFolder(prompt: "Import", message: "Choose a run folder inside <set>/harmonized/") else { return }
         do {
             let imported = try MixProject.importRun(folder)
+            let wasEmpty = document.project.tracks.isEmpty
             document.perform("Import Harmonize Run", undo: undo) { $0 = imported }
+            if wasEmpty, !imported.tracks.isEmpty { Telemetry.shared.record(.mixCreated) }
         } catch {
             alert = error.localizedDescription
         }

@@ -194,6 +194,7 @@ struct HarmonizeSheet: View {
 
     private func apply(_ p: MixProject) {
         document.perform("Harmonize", undo: undo) { $0 = p }
+        Telemetry.shared.record(.harmonizeRun)
         dismiss()
     }
 }

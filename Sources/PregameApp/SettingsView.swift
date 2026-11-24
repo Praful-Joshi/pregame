@@ -2,7 +2,8 @@ import AppKit
 import PregameCore
 import SwiftUI
 
-/// Settings (⌘,): audio output, storage used by stems and caches, and updates.
+/// Settings (⌘,): audio output, storage used by stems and caches, updates, and
+/// what Pregame may send (crash reports and usage data).
 struct SettingsView: View {
     var body: some View {
         TabView {
@@ -18,6 +19,7 @@ struct SettingsView: View {
             .tabItem { Label("Audio", systemImage: "hifispeaker") }
             StorageSettings().tabItem { Label("Storage", systemImage: "internaldrive") }
             UpdateSettings().tabItem { Label("Updates", systemImage: "arrow.triangle.2.circlepath") }
+            PrivacySettings().tabItem { Label("Privacy", systemImage: "hand.raised") }
         }
         .frame(width: 560, height: 520)
     }

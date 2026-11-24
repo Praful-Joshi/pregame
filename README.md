@@ -4,7 +4,7 @@
 
 Pregame is for the **Mix Host**: someone throwing a house party who wants the music to flow — no dead air, no jarring jumps — without learning to DJ. Add a folder of music you own, press **Harmonize**, and Pregame orders the Tracks for key and tempo, then joins each to the next with a beat-matched Transition. Listen, tweak any Transition by ear, and export the whole Mix as one file to play from a phone, a USB stick or a speaker.
 
-- **Local and private:** no account, no backend, no streaming service. Your music never leaves your Mac.
+- **Local and private:** no account, no backend, no streaming service. Your music never leaves your Mac. Crash reports and a few anonymous usage events are sent only if you say yes on first launch, and never include Track titles, file names or paths: see [what's sent](docs/privacy.md).
 - **Free:** GPL-3.0, with no paid export or subscription.
 - **Native:** a SwiftUI app for macOS.
 
